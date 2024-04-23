@@ -1,17 +1,39 @@
-name: Basic deploy
+name: Build and Push Docker image to AWS ECR
+
 on:
   push:
-    branches: [ master ]
+    branches:
+      - main  # or any other branch or tag
 
 jobs:
-  EC2-Deploy:
+  build-and-push:
     runs-on: ubuntu-latest
-    steps:
-      - id: deploy
-        uses: bitovi/github-actions-deploy-docker-to-ec2@v1.0.1
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_default_region: us-east-1
 
-          aws_elb_app_port: 8080 # Match docker exposed port
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build, tag, and push image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: my-repo
+        IMAGE_TAG: latest
+      run: |
+        cd rust_microservice
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    - name: Print ECR Image URL
+      run: |
+        echo "ECR Image URL: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
