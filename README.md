@@ -2,6 +2,8 @@
 
 This project demonstrates a simple REST API server using Rust with the Actix web framework. It is containerized using Docker, automatically built and pushed to AWS Elastic Container Registry (ECR) through GitHub Actions, and deployed to AWS App Runner for easy scaling and management.
 
+Access the webserver at https://wfxp7uqrky.us-east-1.awsapprunner.com 
+
 ## Prerequisites
 
 - Rust and Cargo
